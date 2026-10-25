@@ -236,7 +236,10 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	} else {
 		setStatusMode('progress');
-		Promise.race([window.PortalReady || Promise.resolve(), new Promise((r) => setTimeout(r, 6000))]).then(() => engine.startGame({
+		// download + compile start at once; only the engine's start waits for the portal SDK (max 6 s)
+		const _start = engine.start.bind(engine);
+		engine.start = (...a) => Promise.race([window.PortalReady || Promise.resolve(), new Promise((r) => setTimeout(r, 6000))]).then(() => _start(...a));
+		(engine.startGame({
 			'onProgress': function (current, total) {
 				if (current > 0 && total > 0) {
 					statusProgress.value = current;
